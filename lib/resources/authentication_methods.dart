@@ -9,6 +9,14 @@ class AuthenticationMethods {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  Future<model.User> getUserDetails() async {
+    User? currentUser = _auth.currentUser;
+
+    DocumentSnapshot snapshot =
+        await _firestore.collection('users').doc(currentUser?.uid).get();
+    return model.User.fromSnap(snapshot);
+  }
+
   Future<String> signUpUser(
       {required String email,
       required String password,
@@ -54,7 +62,7 @@ class AuthenticationMethods {
         res = "success";
       }
     } on FirebaseAuthException catch (err) {
-      res = "There was an error!";
+      res = err.toString();
     } catch (err) {
       res = err.toString();
     }

@@ -1,9 +1,14 @@
 import 'dart:typed_data';
-
+import 'package:aplos/resources/authentication_methods.dart';
+import 'package:aplos/responsive/mobile_screen_layout.dart';
+import 'package:aplos/responsive/web_screen_layout.dart';
 import 'package:aplos/utils/constants.dart';
 import 'package:flutter/material.dart';
-
+import '../responsive/responsive_layout_screen.dart';
 import '../widgets/text_field_input.dart';
+import 'login_screen.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -13,6 +18,7 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  final _picker = ImagePicker();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -21,10 +27,10 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _bioController = TextEditingController();
   Uint8List? _image;
   bool _isLoading = false;
+  bool _isChecked = false;
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     _usernameController.dispose();
     _emailController.dispose();
@@ -32,6 +38,52 @@ class _SignupScreenState extends State<SignupScreen> {
     _schoolController.dispose();
     _jobController.dispose();
     _bioController.dispose();
+  }
+
+  void signUpUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    String result = await AuthenticationMethods().signUpUser(
+      email: _emailController.text,
+      password: _passwordController.text,
+      username: _usernameController.text,
+      school: _schoolController.text,
+      job: _jobController.text,
+      bio: _bioController.text,
+      file: _image!,
+    );
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ResponsiveLayout(
+          mobileScreenLayout: MobileScreenLayout(),
+          webScreenLayout: WebScreenLayout(),
+        ),
+      ),
+    );
+  }
+
+  pickImage(ImageSource source) async {
+    final ImagePicker imagePicker = ImagePicker();
+    XFile? file = await imagePicker.pickImage(source: source);
+    if (file != null) {
+      return await file.readAsBytes();
+    }
+    print('No Image Selected');
+  }
+
+  selectImage() async {
+    Uint8List im = await pickImage(ImageSource.gallery);
+
+    setState(() {
+      _image = im;
+    });
   }
 
   @override
@@ -78,32 +130,35 @@ class _SignupScreenState extends State<SignupScreen> {
           child: Center(
             child: Column(
               children: [
-                SizedBox(height: 20),
-                Stack(
-                  children: [
-                    _image != null
-                        ? CircleAvatar(
-                            radius: 64,
-                            backgroundImage: MemoryImage(_image!),
-                          )
-                        : const CircleAvatar(
-                            radius: 90,
-                            backgroundImage: NetworkImage(
-                                "https://www.personality-insights.com/wp-content/uploads/2017/12/default-profile-pic-e1513291410505.jpg"),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: selectImage,
+                  child: Stack(
+                    children: [
+                      _image != null
+                          ? CircleAvatar(
+                              radius: 90,
+                              backgroundImage: MemoryImage(_image!),
+                            )
+                          : const CircleAvatar(
+                              radius: 90,
+                              backgroundImage: NetworkImage(
+                                  "https://www.personality-insights.com/wp-content/uploads/2017/12/default-profile-pic-e1513291410505.jpg"),
+                            ),
+                      Positioned(
+                        bottom: -10,
+                        right: -8,
+                        child: IconButton(
+                          iconSize: 40,
+                          onPressed: () {},
+                          icon: const Icon(
+                            Icons.add_circle_outline,
+                            color: whiteColor,
                           ),
-                    Positioned(
-                      bottom: -10,
-                      right: -8,
-                      child: IconButton(
-                        iconSize: 40,
-                        onPressed: () {},
-                        icon: const Icon(
-                          Icons.add_circle_outline,
-                          color: whiteColor,
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 25),
                 TextFieldInput(
@@ -121,26 +176,26 @@ class _SignupScreenState extends State<SignupScreen> {
                   hintText: "Email",
                   textInputType: TextInputType.name,
                   icon: const Icon(
-                    Icons.person,
+                    Icons.email,
                     color: Colors.white,
                     size: 40,
                   ),
-                  textEditingController: _usernameController,
+                  textEditingController: _emailController,
                 ),
                 const SizedBox(height: 15),
                 TextFieldInput(
                   hintText: "Password",
                   textInputType: TextInputType.name,
                   icon: const Icon(
-                    Icons.person,
+                    Icons.lock,
                     color: Colors.white,
                     size: 40,
                   ),
-                  textEditingController: _usernameController,
+                  textEditingController: _passwordController,
                 ),
                 const SizedBox(height: 15),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 15),
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
                   child: const Divider(
                     color: secondaryColor,
                     thickness: 1,
@@ -160,7 +215,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         color: Colors.white,
                         size: 30,
                       ),
-                      textEditingController: _usernameController,
+                      textEditingController: _schoolController,
                     ),
                     const SizedBox(
                       width: 5,
@@ -176,7 +231,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         color: Colors.white,
                         size: 30,
                       ),
-                      textEditingController: _usernameController,
+                      textEditingController: _jobController,
                     ),
                   ],
                 ),
@@ -221,15 +276,19 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 Row(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                       width: 20,
                     ),
                     Checkbox(
                       overlayColor: MaterialStateProperty.resolveWith(getColor),
-                      value: false,
-                      onChanged: (bool? value) {},
+                      value: _isChecked,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          _isChecked = value!;
+                        });
+                      },
                     ),
-                    SizedBox(
+                    const SizedBox(
                       width: 2,
                     ),
                     const Text("I read and agree to the ",
@@ -242,11 +301,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const SignupScreen(),
-                      ),
-                    );
+                    signUpUser();
                   },
                   child: Container(
                     height: 70,
@@ -275,7 +330,13 @@ class _SignupScreenState extends State<SignupScreen> {
                           style: TextStyle(color: whiteColor)),
                     ),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                        );
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: const Text(

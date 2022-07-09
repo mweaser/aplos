@@ -28,4 +28,17 @@ class User {
         "job": job,
         "bio": bio,
       };
+
+  static User fromSnap(DocumentSnapshot snapshot) {
+    var snap = (snapshot.data() as Map<String, dynamic>);
+    return User(
+      uid: snap["uid"],
+      username: snap["username"],
+      email: snap["email"],
+      photoUrl: snap["photoUrl"],
+      school: snap["school"],
+      job: snap["job"],
+      bio: snap["bio"],
+    );
+  }
 }
